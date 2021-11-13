@@ -23,6 +23,7 @@ app.use(express.json());
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.5fxi2.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
+// Verify Jwt token function
 
 async function varifyToken(req, res, next){
   if(req?.headers?.authorization?.startsWith('Bearer ')){
@@ -45,19 +46,23 @@ async function varifyToken(req, res, next){
 async function run(){
     try{
         await client.connect();
+        // database name
         const database = client.db("zaraDrone");
-
+        // database collection
         const usersCollection = database.collection('users');
         const productsCollection = database.collection('products');
         const reviewCollection = database.collection('review');
         const purchaseCollection = database.collection('purchase');
 
+        // Get purchase data
         
         app.get('/my-orders', async (req, res) => {
           const cursor = purchaseCollection.find({});
           const orders = await cursor.toArray();
           res.send(orders)
         });
+
+        // Delete purchase data
 
         app.delete('/my-orders/:id', async(req, res) => {
           const id = req.params.id;
@@ -66,11 +71,15 @@ async function run(){
           res.json(result)
         }); 
 
+         // Get purchase data by email
+
         app.get('/my-orders/:email', async (req, res) => {
           const email = req.params.email;
           const orders = await purchaseCollection.find({email: email}).toArray();
           res.json(orders)
       }); 
+
+         // Update status to Approved
 
         app.put('/udpate/:id', async(req, res) => {
           const id = req.params.id;
@@ -86,7 +95,7 @@ async function run(){
           res.json(result);
       })
 
-
+        // post purchase data
 
         app.post('/purchase', async(req, res) => {
           const purchase = req.body;
@@ -94,11 +103,15 @@ async function run(){
           res.json(result);
         });
 
+        // post review data
+
         app.post('/review', async(req, res) => {
           const review = req.body;
           const result = await reviewCollection.insertOne(review);
           res.json(result);
         });
+
+        // get review data
 
         app.get('/review', async (req, res) => {
           const cursor = reviewCollection.find({});
@@ -106,17 +119,24 @@ async function run(){
           res.send(reviews)
         });
 
+
+        // post product data
+
         app.post('/products', async(req, res) => {
           const product = req.body;
           const result = await productsCollection.insertOne(product);
           res.json(result);
         });
 
+         // get products data
+
         app.get('/products', async (req, res) => {
           const cursor = productsCollection.find({});
           const products = await cursor.toArray();
           res.send(products)
         }); 
+
+        // delete single product
 
         app.delete('/products/:id', async(req, res) => {
           const id = req.params.id;
@@ -125,12 +145,16 @@ async function run(){
           res.json(result)
         }); 
 
+        // get single product
+
         app.get('/products/:id', async (req, res) => {
           const id = req.params.id;
           const query = {_id: ObjectId(id)};
           const products = await productsCollection.findOne(query);
           res.json(products)
       });
+
+      // get user data
 
       app.get('/users/:email', async(req, res) => {
             const email = req.params.email;
@@ -143,11 +167,25 @@ async function run(){
             res.json({admin: isAdmin});
         });
 
+        // post user 
+
         app.post('/users', async (req, res) => {
           const user = req.body;
           const result = await usersCollection.insertOne(user);
           res.json(result)
         });
+
+         // get user
+
+         app.get('/users', async (req, res) => {
+          const cursor = usersCollection.find({});
+          const users = await cursor.toArray();
+          res.send(users)
+        }); 
+
+         
+
+         // upsert user 
 
         app.put('/users', async(req, res) => {
           const user = req.body;
@@ -157,6 +195,8 @@ async function run(){
           const result = await usersCollection.updateOne(filter, updateDoc, options);
           res.json(result);
         });
+
+      // put role user to admin
 
        app.put('/users/admin', varifyToken,  async(req, res) => {
         const user = req.body;
@@ -176,83 +216,6 @@ async function run(){
        
         
         });
-
-
-
-
-
-
-
-        // GET Services
-      /*   app.get('/services', async (req, res) => {
-            const cursor = productsCollection.find({});
-            const services = await cursor.toArray();
-            res.send(services)
-        });
-
-        // post Services
-        app.post('/services', async(req, res) => {
-            const service = req.body;
-            const result = await productsCollection.insertOne(service);
-            res.json(result);
-        }); */
-
-       /*   // post booking
-            app.post('/booking', async(req, res) => {
-            const booking = req.body;
-            const result = await bookingCollection.insertOne(booking);
-            res.json(result);
-        });
-
-          //GET SINGLE service 
-
-        app.get('/services/:id', async (req, res) => {
-            const id = req.params.id;
-            const query = {_id: ObjectId(id)};
-            const service = await servicesCollection.findOne(query);
-            res.json(service)
-        });
-        //GET all booking by email 
-        app.get('/my-orders/:email', async (req, res) => {
-            const email = req.params.email;
-            const service = await bookingCollection.find({email: email}).toArray();
-            res.json(service)
-        }); */
-
-       /*  //GET all booking
-        app.get('/ManageAllOrders', async (req, res) => {
-            const cursor = bookingCollection.find({});
-            const booking = await cursor.toArray();
-            res.send(booking)
-        });
-        // Delete booking
-        app.delete('/booking/:id', async(req, res) => {
-            const id = req.params.id;
-            const query = {_id: ObjectId(id)}
-            const result = await bookingCollection.deleteOne(query);
-            console.log('deleting users with id', result);
-            res.json(result)
-          }); */
-        
-
-        // update status
-        /* app.put('/udpate/:id', async(req, res) => {
-            const id = req.params.id;
-            const filter = {_id: ObjectId(id)}
-            const options = { upsert: true };
-            const updatedDoc = {
-              $set: {
-                status: "Approved"
-              },
-           };
-            const result = await bookingCollection.updateOne(filter,updatedDoc, options );
-
-            res.json(result);
-        })
- */
-        
-
-
 
     }
     finally{
