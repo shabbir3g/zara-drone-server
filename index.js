@@ -79,7 +79,7 @@ async function run(){
           res.json(orders)
       }); 
 
-         // Update status to Approved
+         // Update status to Shipped
 
         app.put('/udpate/:id', async(req, res) => {
           const id = req.params.id;
@@ -87,7 +87,7 @@ async function run(){
           const options = { upsert: true };
           const updatedDoc = {
             $set: {
-              status: "Approved"
+              status: "Shipped"
             },
          };
           const result = await purchaseCollection.updateOne(filter,updatedDoc, options );
